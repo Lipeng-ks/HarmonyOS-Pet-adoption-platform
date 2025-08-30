@@ -1,0 +1,28 @@
+{
+  "src": [
+    "pages/Auth/Login",
+    "pages/Home/Home",
+    "pages/Home/CitySelect",
+    "pages/Home/AnimalDetail",
+    "pages/Collection/Collection",
+    "pages/Profile/Individual",
+    "pages/Profile/Adopt",
+    "pages/Profile/MyOrders",
+    "pages/Home/AdoptApply",
+    "pages/Profile/MyAddress",
+    "pages/PersonalCenter/Setoptions",
+    "pages/Profile/EditProfile",
+    "pages/Auth/Register",
+    "pages/Profile/AddAddress",
+    "pages/Profile/Checkin",
+    "pages/Home/AdoptApplicationDetail",
+    "pages/Profile/RealNameAuth",
+    "pages/Profile/MyFoster",
+    "pages/Home/MissingPets",
+    "pages/Home/MissingPetDetail",
+    "pages/Profile/MyMissingPets",
+    "pages/Profile/EditMissingPet",
+    "pages/Profile/EditRehomePet",
+    "pages/Profile/ChangePassword"
+  ]
+}

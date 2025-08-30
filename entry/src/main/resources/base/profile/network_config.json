@@ -1,0 +1,30 @@
+{
+  "network-security-config": {
+    "domain-config": [
+      {
+        "domains": [
+          {
+            "include-subdomains": true,
+            "name": "images.unsplash.com"
+          },
+          {
+            "include-subdomains": true,
+            "name": "localhost"
+          },
+          {
+            "include-subdomains": true,
+            "name": "127.0.0.1"
+          },
+          {
+            "include-subdomains": true,
+            "name": "192.168.228.89"
+          }
+        ],
+        "cleartextTrafficPermitted": true
+      }
+    ],
+    "base-config": {
+      "cleartextTrafficPermitted": true
+    }
+  }
+}
