@@ -517,4 +517,4 @@ logging.level.org.springframework.security=DEBUG
 ---
 
 **技术架构** | Spring Boot + MySQL + JPA  
-**最后更新** | 2024年8月30日
+**最后更新** | 2025年8月30日

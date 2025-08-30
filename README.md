@@ -271,4 +271,4 @@ npm run dev
 ---
 
 **技术架构** | HarmonyOS + Spring Boot + Vue.js  
-**最后更新** | 2024年8月30日
+**最后更新** | 2025年8月30日
