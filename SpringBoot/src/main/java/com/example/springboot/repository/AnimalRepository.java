@@ -76,4 +76,18 @@ public interface AnimalRepository extends JpaRepository<Animal, Long> {
     Page<Animal> findByAdopted(Boolean adopted, Pageable pageable);
     Page<Animal> findByListed(Boolean listed, Pageable pageable);
     Page<Animal> findByAdoptedAndListed(Boolean adopted, Boolean listed, Pageable pageable);
+
+    // 数据分析相关查询方法
+    
+    /**
+     * 获取宠物类型分布统计
+     */
+    @Query("SELECT a.type, COUNT(a) FROM Animal a GROUP BY a.type ORDER BY COUNT(a) DESC")
+    List<Object[]> findTypeDistribution();
+    
+    /**
+     * 获取城市分布统计
+     */
+    @Query("SELECT a.city, COUNT(a) FROM Animal a WHERE a.city IS NOT NULL GROUP BY a.city ORDER BY COUNT(a) DESC")
+    List<Object[]> findCityDistribution();
 }

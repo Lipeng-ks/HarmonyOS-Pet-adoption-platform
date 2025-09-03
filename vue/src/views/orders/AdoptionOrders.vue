@@ -1,126 +1,240 @@
 <template>
-  <div>
-    <el-card>
-      <template #header>
-        <div class="card-header">
-          <div class="left">
-            <el-space>
-              <el-select v-model="filters.status" clearable placeholder="订单状态" style="width: 160px" @change="onFilterChange">
-                <el-option v-for="s in statuses" :key="s" :value="s" :label="s" />
-              </el-select>
-              <el-select v-model="filters.province" clearable placeholder="省份筛选" style="width: 140px" @change="onFilterChange">
-                <el-option v-for="(p, index) in provinces" :key="index" :value="p" :label="p" />
-              </el-select>
-              <el-input 
-                v-model="filters.keyword" 
-                placeholder="搜索宠物名或地区" 
-                style="width: 200px"
-                clearable
-                @clear="onFilterChange"
-                @keyup.enter="onFilterChange"
-              >
-                <template #prefix>
-                  <el-icon><Search /></el-icon>
-                </template>
-              </el-input>
-              <el-button @click="onFilterChange" :loading="loading">
-                <el-icon><Refresh /></el-icon>
-                刷新
-              </el-button>
-            </el-space>
-          </div>
-          <div class="right">
-            <el-button type="primary" @click="openCreate">新建订单</el-button>
-          </div>
-        </div>
-      </template>
+  <div class="orders-page">
+    <!-- 页面标题 -->
+    <div class="page-header">
+      <div class="header-content">
+        <h1>订单管理</h1>
+        <p>管理宠物领养订单和申请</p>
+      </div>
+      <el-button type="primary" @click="openCreate">
+        <el-icon><Plus /></el-icon>
+        新建订单
+      </el-button>
+    </div>
 
-      <el-table :data="list" stripe>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="userId" label="用户ID" width="100" />
-        <el-table-column prop="animalId" label="动物ID" width="100" />
-        <el-table-column prop="petName" label="宠物名" min-width="160" />
+    <!-- 筛选区域 -->
+    <el-card class="filter-card" shadow="never">
+      <el-row :gutter="16" align="middle">
+        <el-col :xs="24" :sm="6" :md="4">
+          <div class="filter-item">
+            <label>订单状态</label>
+            <el-select v-model="filters.status" clearable placeholder="全部状态" @change="onFilterChange">
+              <el-option v-for="s in statuses" :key="s" :value="s" :label="s" />
+            </el-select>
+          </div>
+        </el-col>
+        <el-col :xs="24" :sm="6" :md="4">
+          <div class="filter-item">
+            <label>省份筛选</label>
+            <el-select v-model="filters.province" clearable placeholder="全部省份" @change="onFilterChange">
+              <el-option v-for="p in provinces" :key="p" :value="p" :label="p" />
+            </el-select>
+          </div>
+        </el-col>
+        <el-col :xs="24" :sm="8" :md="6">
+          <div class="filter-item">
+            <label>关键词搜索</label>
+            <el-input 
+              v-model="filters.keyword" 
+              placeholder="搜索宠物名或地区" 
+              clearable
+              @clear="onFilterChange"
+              @keyup.enter="onFilterChange"
+            >
+              <template #prefix>
+                <el-icon><Search /></el-icon>
+              </template>
+            </el-input>
+          </div>
+        </el-col>
+        <el-col :xs="24" :sm="4" :md="4">
+          <div class="filter-actions">
+            <el-button @click="onFilterChange" :loading="loading">
+              <el-icon><Refresh /></el-icon>
+              刷新
+            </el-button>
+          </div>
+        </el-col>
+      </el-row>
+    </el-card>
+
+    <!-- 数据表格 -->
+    <el-card class="table-card" shadow="never">
+      <el-table :data="list" v-loading="loading" stripe>
+        <el-table-column prop="id" label="订单ID" width="80" />
+        <el-table-column prop="userId" label="用户ID" width="80" />
+        <el-table-column prop="animalId" label="动物ID" width="80" />
+        <el-table-column prop="petName" label="宠物名" min-width="120" />
         <el-table-column label="省份" width="100">
           <template #default="{ row }">
-            {{ getCityProvince(row.petAddress) || '' }}
+            {{ getCityProvince(row.petAddress) || '-' }}
           </template>
         </el-table-column>
-        <el-table-column prop="petAddress" label="所在地区" min-width="160" />
-        <el-table-column prop="applicationTime" label="申请时间" width="180" />
-        <el-table-column label="状态" width="180">
+        <el-table-column prop="petAddress" label="所在地区" min-width="140" show-overflow-tooltip />
+        <el-table-column prop="applicationTime" label="申请时间" width="160">
           <template #default="{ row }">
-            <el-tag type="info">{{ row.status }}</el-tag>
-            <el-dropdown trigger="click" style="margin-left:8px" @command="(s)=>changeStatus(row, s)">
-              <span class="el-dropdown-link">变更</span>
+            {{ formatDate(row.applicationTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="状态" width="140">
+          <template #default="{ row }">
+            <el-tag :type="getStatusType(row.status)" size="small">
+              {{ row.status }}
+            </el-tag>
+            <el-dropdown 
+              trigger="click" 
+              style="margin-left: 8px" 
+              @command="(s: OrderStatus) => changeStatus(row, s)"
+            >
+              <el-button size="small" type="primary" link>
+                变更
+              </el-button>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item v-for="s in statuses" :key="s" :command="s">{{ s }}</el-dropdown-item>
+                  <el-dropdown-item 
+                    v-for="s in statuses" 
+                    :key="s" 
+                    :command="s"
+                    :disabled="s === row.status"
+                  >
+                    {{ s }}
+                  </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
-            <el-button size="small" @click="openEdit(row)">
-              <el-icon><Edit /></el-icon>
-              编辑
-            </el-button>
-            <el-popconfirm title="确认删除该订单？" @confirm="onDelete(row)">
-              <template #reference>
-                <el-button size="small" type="danger" style="margin-left: 8px;">
-                  <el-icon><Delete /></el-icon>
-                  删除
-                </el-button>
-              </template>
-            </el-popconfirm>
+            <div class="action-buttons">
+              <el-button size="small" @click="openEdit(row)">
+                <el-icon><Edit /></el-icon>
+                编辑
+              </el-button>
+              <el-popconfirm title="确认删除该订单？" @confirm="onDelete(row)">
+                <template #reference>
+                  <el-button size="small" type="danger">
+                    <el-icon><Delete /></el-icon>
+                    删除
+                  </el-button>
+                </template>
+              </el-popconfirm>
+            </div>
           </template>
         </el-table-column>
       </el-table>
 
-      <div style="margin-top: 12px; display:flex; justify-content:flex-end">
+      <!-- 分页 -->
+      <div class="pagination-wrapper" v-if="pager.total > 0">
         <el-pagination
           background
           layout="prev, pager, next, sizes, total"
           :total="pager.total"
           :current-page="pager.page"
           :page-size="pager.size"
-          :page-sizes="[10,20,30,50]"
+          :page-sizes="[10, 20, 30, 50]"
           @current-change="onPageChange"
           @size-change="onSizeChange"
         />
       </div>
 
-      <el-empty v-if="!loading && list.length===0" description="暂无数据" />
+      <el-empty v-if="!loading && list.length === 0" description="暂无订单数据" />
     </el-card>
 
+    <!-- 新建/编辑订单弹窗 -->
     <el-dialog v-model="dialog.visible" :title="dialog.isEdit ? '编辑订单' : '新建订单'" width="600px">
-      <el-form :model="dialog.form" label-width="120px">
-        <el-form-item label="用户ID"><el-input-number v-model="dialog.form.userId" :min="1" /></el-form-item>
-        <el-form-item label="动物ID"><el-input-number v-model="dialog.form.animalId" :min="1" :controls="false" placeholder="可选，填写则精确关联" /></el-form-item>
-        <el-form-item label="宠物名"><el-input v-model="dialog.form.petName" /></el-form-item>
-        <el-form-item label="所在地区">
-          <div style="display:flex; gap:8px; width:100%">
-            <el-select v-model="dialogProvince" placeholder="省份" style="width: 160px" @change="onDialogProvinceChange">
-              <el-option v-for="p in provinces" :key="p" :value="p" :label="p" />
-            </el-select>
-            <el-select v-model="dialogCity" placeholder="城市" style="flex:1">
-              <el-option v-for="c in dialogCities" :key="c" :value="c" :label="c" />
-            </el-select>
-          </div>
+      <el-form :model="dialog.form" label-width="100px" label-position="top">
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="用户ID" required>
+              <el-input-number 
+                v-model="dialog.form.userId" 
+                :min="1" 
+                style="width: 100%"
+                placeholder="请输入用户ID"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="动物ID">
+              <el-input-number 
+                v-model="dialog.form.animalId" 
+                :min="1" 
+                :controls="false" 
+                style="width: 100%"
+                placeholder="可选，精确关联动物"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        
+        <el-form-item label="宠物名称" required>
+          <el-input v-model="dialog.form.petName" placeholder="请输入宠物名称" />
         </el-form-item>
-        <el-form-item label="收货地址"><el-input v-model="dialog.form.shippingAddress" placeholder="收货地址" /></el-form-item>
-        <el-form-item label="养宠经验"><el-input v-model="dialog.form.petExperience" type="textarea" :rows="2" placeholder="请描述您的养宠经验" /></el-form-item>
-        <el-form-item label="申请理由"><el-input v-model="dialog.form.applicationReason" type="textarea" :rows="3" placeholder="请说明申请领养的理由" /></el-form-item>
+        
+        <el-row :gutter="16">
+          <el-col :span="12">
+            <el-form-item label="省份" required>
+              <el-select 
+                v-model="dialogProvince" 
+                placeholder="请选择省份" 
+                style="width: 100%" 
+                @change="onDialogProvinceChange"
+              >
+                <el-option v-for="p in provinces" :key="p" :value="p" :label="p" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="城市" required>
+              <el-select 
+                v-model="dialogCity" 
+                placeholder="请选择城市" 
+                style="width: 100%"
+                :disabled="!dialogProvince"
+              >
+                <el-option v-for="c in dialogCities" :key="c" :value="c" :label="c" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        
+        <el-form-item label="收货地址">
+          <el-input v-model="dialog.form.shippingAddress" placeholder="请输入收货地址" />
+        </el-form-item>
+        
+        <el-form-item label="养宠经验">
+          <el-input 
+            v-model="dialog.form.petExperience" 
+            type="textarea" 
+            :rows="3"
+            placeholder="请描述您的养宠经验"
+          />
+        </el-form-item>
+        
+        <el-form-item label="申请理由">
+          <el-input 
+            v-model="dialog.form.applicationReason" 
+            type="textarea" 
+            :rows="3"
+            placeholder="请说明申请领养的理由"
+          />
+        </el-form-item>
+        
         <el-form-item label="订单状态" v-if="dialog.isEdit">
-          <el-select v-model="dialog.form.status" style="width: 160px">
+          <el-select v-model="dialog.form.status" style="width: 200px">
             <el-option v-for="s in statuses" :key="s" :value="s" :label="s" />
           </el-select>
         </el-form-item>
       </el-form>
+      
       <template #footer>
-        <el-button @click="dialog.visible=false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="onSubmit">{{ dialog.isEdit ? '保存' : '创建' }}</el-button>
+        <div class="dialog-footer">
+          <el-button @click="dialog.visible = false">取消</el-button>
+          <el-button type="primary" :loading="submitting" @click="onSubmit">
+            {{ dialog.isEdit ? '更新' : '创建' }}
+          </el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -128,8 +242,14 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Edit, Delete } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { 
+  Search, 
+  Refresh, 
+  Edit, 
+  Delete, 
+  Plus 
+} from '@element-plus/icons-vue'
 import { getOrdersPage, listOrders, updateOrderStatus, createOrder, updateOrder, deleteOrder, type AdoptionOrder, type OrderStatus } from '@/services/orders'
 import { listProvinces, listCitiesByProvince } from '@/services/provinces'
 
@@ -137,7 +257,11 @@ import { listProvinces, listCitiesByProvince } from '@/services/provinces'
 const statuses: OrderStatus[] = ['审核中', '已发货', '完成', '评价']
 const loading = ref(false)
 const list = ref<AdoptionOrder[]>([])
-const filters = reactive<{ status?: OrderStatus | null; keyword?: string; province?: string | null }>({ status: null, keyword: '', province: null })
+const filters = reactive<{ status?: OrderStatus | null; keyword: string; province?: string | null }>({ 
+  status: null, 
+  keyword: '', 
+  province: null 
+})
 
 // 省份城市数据
 const provinces = ref<string[]>([])
@@ -164,64 +288,80 @@ const dialog = reactive<{
 }>({
   visible: false,
   isEdit: false,
-  form: { userId: null, animalId: null, petName: '', petAddress: '', shippingAddress: '', petExperience: '', applicationReason: '', status: '审核中' }
+  form: { 
+    userId: null, 
+    animalId: null, 
+    petName: '', 
+    petAddress: '', 
+    shippingAddress: '', 
+    petExperience: '', 
+    applicationReason: '', 
+    status: '审核中' 
+  }
 })
 const submitting = ref(false)
+
+// 获取状态标签类型
+function getStatusType(status: string) {
+  const typeMap: Record<string, string> = {
+    '审核中': 'warning',
+    '已发货': 'primary',
+    '完成': 'success',
+    '评价': 'info'
+  }
+  return typeMap[status] || 'info'
+}
+
+// 格式化日期
+function formatDate(date?: string | null) {
+  if (!date) return '-'
+  try {
+    return new Date(date).toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  } catch {
+    return date
+  }
+}
 
 async function fetchData() {
   loading.value = true
   try {
-    // 构建查询参数，确保页码从0开始（后端可能使用0基索引）
     const params = {
-      page: pager.page - 1, // 转换为0基索引
+      page: pager.page - 1,
       size: pager.size,
       status: filters.status || undefined,
       keyword: filters.keyword || undefined
     }
     
-    // 省份筛选逻辑：总是先获取所有数据，然后在前端进行省份筛选
-    // 这样可以确保筛选的准确性，因为后端关键词搜索可能无法精确匹配省份
-    
-    console.log('请求参数:', params) // 调试日志
-    
     const res = await getOrdersPage(params)
-    console.log('接口返回:', res) // 调试日志
-    
     const data = res as any
     
-    // 处理返回数据结构
     if (data.success !== false) {
-      // 兼容多种返回结构
       const pagePayload = data.records !== undefined ? data : (data.data || {})
       let items = pagePayload.records || pagePayload.content || pagePayload.list || []
       
-      // 如果有省份筛选，在前端进行省份筛选
+      // 省份筛选
       if (filters.province && Array.isArray(items)) {
-        console.log('开始省份筛选，目标省份:', filters.province)
-        console.log('筛选前数据:', items.map(item => ({ id: item.id, address: item.petAddress, extractedProvince: getCityProvince(item.petAddress) })))
-        
         items = items.filter((order: AdoptionOrder) => {
           const extractedProvince = getCityProvince(order.petAddress)
-          const match = extractedProvince === filters.province
-          console.log(`地址: ${order.petAddress}, 提取省份: ${extractedProvince}, 匹配: ${match}`)
-          return match
+          return extractedProvince === filters.province
         })
-        
-        console.log('筛选后数据:', items.length)
       }
       
       list.value = Array.isArray(items) ? items : []
       pager.total = Array.isArray(items) ? items.length : (pagePayload.total || pagePayload.totalElements || 0)
       
-      // 同步分页信息
       if (typeof pagePayload.page === 'number') {
-        pager.page = pagePayload.page + 1 // 转换回1基索引
+        pager.page = pagePayload.page + 1
       }
       if (typeof pagePayload.size === 'number') {
         pager.size = pagePayload.size
       }
-      
-      console.log('处理后的数据:', { list: list.value, total: pager.total })
     } else {
       throw new Error(data.message || '获取数据失败')
     }
@@ -230,7 +370,7 @@ async function fetchData() {
     console.error('getOrdersPage 调用失败：', e?.message)
     ElMessage.error(e.message || '加载订单数据失败')
     
-    // 如果分页接口失败，尝试使用非分页接口作为备选
+    // 备选方案：使用非分页接口
     try {
       const res2 = await listOrders()
       const data2 = res2 as any
@@ -238,7 +378,7 @@ async function fetchData() {
       if (data2.success !== false) {
         let allOrders = data2.data || data2 || []
         
-        // 在前端进行筛选
+        // 前端筛选
         if (filters.status) {
           allOrders = allOrders.filter((order: AdoptionOrder) => order.status === filters.status)
         }
@@ -260,8 +400,6 @@ async function fetchData() {
         const endIndex = startIndex + pager.size
         list.value = allOrders.slice(startIndex, endIndex)
         pager.total = allOrders.length
-        
-        console.log('使用备选接口，筛选后数据:', { list: list.value, total: pager.total })
       }
     } catch (e2: any) {
       console.error('备选接口也失败：', e2?.message)
@@ -274,11 +412,18 @@ async function fetchData() {
 }
 
 async function changeStatus(row: AdoptionOrder, s: OrderStatus) {
+  if (!row.id) {
+    ElMessage.error('订单ID不存在')
+    return
+  }
+  
   try {
-    const res = await updateOrderStatus(row.id!, s)
-    if (res.success) {
+    const res = await updateOrderStatus(row.id, s)
+    if ((res as any).success !== false) {
       row.status = s
       ElMessage.success('状态已更新')
+    } else {
+      ElMessage.error((res as any).message || '更新失败')
     }
   } catch (e: any) {
     ElMessage.error(e.message || '更新失败')
@@ -286,11 +431,18 @@ async function changeStatus(row: AdoptionOrder, s: OrderStatus) {
 }
 
 async function onDelete(row: AdoptionOrder) {
+  if (!row.id) {
+    ElMessage.error('订单ID不存在')
+    return
+  }
+  
   try {
-    const res = await deleteOrder(row.id!)
-    if (res.success) {
+    const res = await deleteOrder(row.id)
+    if ((res as any).success !== false) {
       ElMessage.success('删除成功')
       fetchData()
+    } else {
+      ElMessage.error((res as any).message || '删除失败')
     }
   } catch (e: any) {
     ElMessage.error(e.message || '删除失败')
@@ -333,7 +485,16 @@ function parseAddress(address: string) {
 
 function openCreate() {
   dialog.isEdit = false
-  dialog.form = { userId: null, animalId: null, petName: '', petAddress: '', shippingAddress: '', petExperience: '', applicationReason: '', status: '审核中' }
+  dialog.form = { 
+    userId: null, 
+    animalId: null, 
+    petName: '', 
+    petAddress: '', 
+    shippingAddress: '', 
+    petExperience: '', 
+    applicationReason: '', 
+    status: '审核中' 
+  }
   dialogProvince.value = ''
   dialogCity.value = ''
   dialogCities.value = []
@@ -362,7 +523,7 @@ async function openEdit(row: AdoptionOrder) {
   // 加载对应省份的城市列表
   if (province) {
     await onDialogProvinceChange()
-    dialogCity.value = city // 重新设置城市值
+    dialogCity.value = city
   }
   
   dialog.visible = true
@@ -373,6 +534,7 @@ async function onSubmit() {
   try {
     if (!dialog.form.userId) throw new Error('请填写用户ID')
     if (!dialog.form.petName.trim()) throw new Error('请填写宠物名')
+    
     // 构建完整地址
     const fullAddress = dialogProvince.value && dialogCity.value 
       ? `${dialogProvince.value}${dialogCity.value}`
@@ -394,7 +556,10 @@ async function onSubmit() {
     
     let res
     if (dialog.isEdit) {
-      res = await updateOrder(dialog.form.id!, payload)
+      if (!dialog.form.id) {
+        throw new Error('订单ID不存在')
+      }
+      res = await updateOrder(dialog.form.id, payload)
     } else {
       res = await createOrder(payload)
     }
@@ -449,43 +614,27 @@ async function loadProvinces() {
     const res = await listProvinces()
     provinces.value = (res as any).data || res || []
     
-    // 加载省份-城市映射缓存
-    const cacheKey = 'cityProvinceMap'
-    const cacheExpiry = 'cityProvinceMapExpiry'
-    const cached = localStorage.getItem(cacheKey)
-    const expiry = localStorage.getItem(cacheExpiry)
+    // 并行加载所有省份的城市数据
+    const cityPromises = provinces.value.map(async (province) => {
+      try {
+        const cityRes = await listCitiesByProvince(province)
+        const cities = (cityRes as any).data || cityRes || []
+        return { province, cities }
+      } catch {
+        return { province, cities: [] }
+      }
+    })
     
-    if (cached && expiry && Date.now() < parseInt(expiry)) {
-      cityProvinceMap.value = JSON.parse(cached)
-    } else {
-      // 并行加载所有省份的城市数据
-      const cityPromises = provinces.value.map(async (province) => {
-        try {
-          const cityRes = await listCitiesByProvince(province)
-          const cities = (cityRes as any).data || cityRes || []
-          return { province, cities }
-        } catch {
-          return { province, cities: [] }
-        }
+    const results = await Promise.all(cityPromises)
+    const newMap: Record<string, string> = {}
+    
+    results.forEach(({ province, cities }) => {
+      cities.forEach((city: string) => {
+        newMap[city] = province
       })
-      
-      const results = await Promise.all(cityPromises)
-      const newMap: Record<string, string> = {}
-      
-      results.forEach(({ province, cities }) => {
-        cities.forEach((city: string) => {
-          newMap[city] = province
-        })
-      })
-      
-      cityProvinceMap.value = newMap
-      
-      // 缓存24小时
-      localStorage.setItem(cacheKey, JSON.stringify(newMap))
-      localStorage.setItem(cacheExpiry, (Date.now() + 24 * 60 * 60 * 1000).toString())
-    }
-    console.log('省份数据加载完成:', provinces.value)
-    console.log('省份数据长度:', provinces.value.length)
+    })
+    
+    cityProvinceMap.value = newMap
   } catch (e) {
     console.error('加载省份数据失败:', e)
   }
@@ -498,5 +647,157 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.card-header { display: flex; align-items: center; justify-content: space-between; }
+.orders-page {
+  padding: 24px;
+  background: #f5f7fa;
+  min-height: calc(100vh - 60px);
+}
+
+/* 页面标题 */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.header-content h1 {
+  margin: 0 0 4px 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.header-content p {
+  margin: 0;
+  font-size: 16px;
+  color: #909399;
+}
+
+/* 筛选卡片 */
+.filter-card {
+  margin-bottom: 16px;
+  border: none;
+  border-radius: 12px;
+}
+
+.filter-item {
+  margin-bottom: 16px;
+}
+
+.filter-item label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #606266;
+}
+
+.filter-item .el-select,
+.filter-item .el-input {
+  width: 100%;
+}
+
+.filter-actions {
+  margin-top: 24px;
+}
+
+/* 表格卡片 */
+.table-card {
+  border: none;
+  border-radius: 12px;
+}
+
+.table-card :deep(.el-card__body) {
+  padding: 0;
+}
+
+.table-card :deep(.el-table) {
+  border-radius: 12px;
+}
+
+.table-card :deep(.el-table th) {
+  background-color: #fafafa;
+  color: #606266;
+  font-weight: 600;
+  border: none;
+}
+
+.table-card :deep(.el-table td) {
+  border: none;
+  padding: 16px 12px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-buttons .el-button {
+  margin: 0;
+}
+
+/* 分页 */
+.pagination-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+  padding: 16px 24px;
+  border-top: 1px solid #f0f2f5;
+}
+
+/* 弹窗样式 */
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .orders-page {
+    padding: 16px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .header-content h1 {
+    font-size: 24px;
+  }
+
+  .filter-actions {
+    margin-top: 16px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .action-buttons .el-button {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .pagination-wrapper {
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .pagination-wrapper :deep(.el-pagination) {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .filter-actions .el-button {
+    width: 100%;
+  }
+}
 </style>

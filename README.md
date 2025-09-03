@@ -121,15 +121,20 @@ entry/src/main/ets/
 - **状态跟踪**：订单状态变更和通知
 - **事件驱动**：`AdoptionOrderEventListener.java` - 异步事件处理
 
-#### 5. 📊 签到系统
+#### 5. 📊 数据分析
+- **业务统计**：`AnalyticsController.java` - 核心业务指标统计
+- **数据报表**：用户、宠物、订单等数据分析
+- **趋势分析**：业务数据趋势分析和预测
+
+#### 6. 📊 签到系统
 - **签到管理**：`UserCheckinController.java` - 用户签到功能
 - **统计分析**：签到数据统计和连续签到计算
 
-#### 6. 🏙️ 地区管理
+#### 7. 🏙️ 地区管理
 - **省市数据**：`ProvinceController.java`, `CityController.java`
 - **地区查询**：省市联动查询接口
 
-#### 7. 🔍 寻宠功能
+#### 8. 🔍 寻宠功能
 - **寻宠管理**：`MissingPetController.java` - 走失宠物信息管理
 - **状态跟踪**：寻宠信息状态管理
 
@@ -142,7 +147,13 @@ entry/src/main/ets/
 ├── MissingPet (寻宠信息)
 ├── UserCheckin (签到记录)
 ├── UserFavorite (收藏记录)
-└── ProvinceCity (省市数据)
+├── ProvinceCity (省市数据)
+└── Analytics Tables (数据分析表)
+    ├── analytics_summary (业务统计汇总)
+    ├── animal_type_stats (动物类型统计)
+    ├── city_stats (城市统计)
+    ├── user_behavior_analytics (用户行为分析)
+    └── analytics_jobs (统计任务记录)
 ```
 
 ## 💻 管理后台 (Vue.js)
@@ -173,14 +184,55 @@ entry/src/main/ets/
 - **状态跟踪**：订单状态实时更新
 - **数据筛选**：多维度订单筛选
 
-#### 4. 📊 签到管理
+#### 4. 📊 数据分析
+- **业务统计**：`AnalyticsPage.vue` - 核心业务数据可视化
+- **图表展示**：使用ECharts进行数据图表展示
+- **实时监控**：实时业务数据监控和分析
+- **报表导出**：数据报表导出功能
+
+#### 5. 📊 签到管理
 - **签到记录**：`CheckinPage.vue` - 用户签到数据管理
 - **数据统计**：签到统计和分析
 - **用户筛选**：按用户和日期筛选
 
-#### 5. 🔍 寻宠管理
+#### 6. 🔍 寻宠管理
 - **寻宠列表**：`LostPetsList.vue` - 寻宠信息管理
 - **状态跟踪**：寻宠信息状态管理
+
+#### 7. ⚙️ 系统设置
+- **系统配置**：`SettingsPage.vue` - 系统参数配置管理
+- **功能开关**：系统功能的启用和禁用控制
+- **参数调整**：系统运行参数优化
+
+#### 8. 👤 权限管理
+- **角色管理**：`PermissionsPage.vue` - 用户角色和权限管理
+- **访问控制**：页面和功能访问权限控制
+- **权限审计**：权限变更审计和日志记录
++++++++ REPLACE</div>
+</replace_in_file>
+
+<replace_in_file id="update_readme_api_list">
+<path>README.md</path>
+<diff>------- SEARCH
+### 主要接口列表
+- **认证接口**：`POST /api/auth/login`
+- **宠物管理**：`GET|POST|PUT|DELETE /api/animals`
+- **用户管理**：`GET|POST|PUT|DELETE /api/users`
+- **订单管理**：`GET|POST|PUT /api/orders`
+- **签到功能**：`POST /api/checkin`
+- **收藏功能**：`POST|DELETE /api/favorites`
+- **地区查询**：`GET /api/provinces`, `GET /api/cities`
+=======
+### 主要接口列表
+- **认证接口**：`POST /api/auth/login`
+- **宠物管理**：`GET|POST|PUT|DELETE /api/animals`
+- **用户管理**：`GET|POST|PUT|DELETE /api/users`
+- **订单管理**：`GET|POST|PUT /api/orders`
+- **数据分析**：`GET /api/analytics/metrics`, `GET /api/analytics/dashboard`
+- **签到功能**：`POST /api/checkin`
+- **收藏功能**：`POST|DELETE /api/favorites`
+- **地区查询**：`GET /api/provinces`, `GET /api/cities`
+- **寻宠管理**：`GET|POST|PUT|DELETE /api/missing-pets`
 
 ## 🔧 开发环境搭建
 
@@ -258,8 +310,10 @@ npm run dev
 ### 业务特色
 - **用户体验**：直观的移动端操作界面
 - **管理效率**：强大的后台管理功能
-- **数据统计**：完整的业务数据分析
-- **扩展性**：模块化设计，易于扩展
+- **数据分析**：完整的业务数据统计和可视化分析
+- **权限管理**：完善的用户权限和角色管理体系
+- **系统配置**：灵活的系统参数配置和功能开关
+- **扩展性**：模块化设计，易于功能扩展和维护
 
 ## 🤝 开发团队
 
@@ -271,4 +325,4 @@ npm run dev
 ---
 
 **技术架构** | HarmonyOS + Spring Boot + Vue.js  
-**最后更新** | 2025年8月30日
+**最后更新** | 2025年9月03日

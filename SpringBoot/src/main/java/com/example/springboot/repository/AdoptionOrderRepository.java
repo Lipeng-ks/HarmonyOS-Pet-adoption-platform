@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -55,4 +56,21 @@ public interface AdoptionOrderRepository extends JpaRepository<AdoptionOrder, Lo
      * 判断是否存在相同用户与宠物、且状态为指定状态的订单
      */
     boolean existsByUserIdAndPetNameAndStatus(Long userId, String petName, AdoptionOrder.OrderStatus status);
+
+    // 数据分析相关查询方法
+    
+    /**
+     * 根据状态统计订单数量
+     */
+    Long countByStatus(AdoptionOrder.OrderStatus status);
+    
+    /**
+     * 统计指定状态和完成时间范围内的订单数量
+     */
+    Long countByStatusAndCompletedAtBetween(AdoptionOrder.OrderStatus status, LocalDateTime startDate, LocalDateTime endDate);
+    
+    /**
+     * 统计申请时间范围内的订单数量
+     */
+    Long countByApplicationTimeBetween(LocalDateTime startDate, LocalDateTime endDate);
 }
