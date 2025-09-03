@@ -11,7 +11,7 @@
  Target Server Version : 80043
  File Encoding         : 65001
 
- Date: 30/08/2025 13:53:07
+ Date: 03/09/2025 16:46:59
 */
 
 SET NAMES utf8mb4;
@@ -40,8 +40,9 @@ CREATE TABLE `adoption_orders`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `ux_adoption_orders_order_no`(`order_no` ASC) USING BTREE,
   INDEX `idx_adoption_orders_user_id`(`user_id` ASC) USING BTREE,
-  INDEX `idx_adoption_orders_animal_id`(`animal_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '领养订单表' ROW_FORMAT = Dynamic;
+  INDEX `idx_adoption_orders_animal_id`(`animal_id` ASC) USING BTREE,
+  INDEX `idx_status_created`(`status` ASC, `created_at` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '领养订单表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of adoption_orders
@@ -50,6 +51,91 @@ INSERT INTO `adoption_orders` VALUES (5, '奶茶', '北京市北京市', 'app.me
 INSERT INTO `adoption_orders` VALUES (10, '小白', '上海市上海市', 'app.media.xmxmm', 'bzd 13900139000 北京市 北京市', '一年', '没有', '已发货', '2025-08-22 04:08:28', '2025-08-22 04:08:28', '2025-08-29 21:41:32', 9, '2508231503280010', NULL, 7);
 INSERT INTO `adoption_orders` VALUES (11, '小灰', '广东省广州市', 'app.media.ddfchjbd', '张三 13800138000 上海市 浦东新区世纪大道100号', '没有', '没有', '完成', '2025-08-23 08:20:55', '2025-08-23 08:20:55', '2025-08-29 21:41:55', 1, 'AO20250823162055720502', '2025-08-29 18:17:30', 10);
 INSERT INTO `adoption_orders` VALUES (12, '小星', '福建省厦门市', 'app.media.xhvffg', '张三 13800138000 上海市 浦东新区世纪大道100号', '没有', '没有', '评价', '2025-08-23 17:18:27', '2025-08-23 17:18:27', '2025-08-29 21:42:04', 1, 'AO20250824011826710658', NULL, 26);
+
+-- ----------------------------
+-- Table structure for analytics_jobs
+-- ----------------------------
+DROP TABLE IF EXISTS `analytics_jobs`;
+CREATE TABLE `analytics_jobs`  (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `job_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '任务名称',
+  `job_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '任务类型：daily, weekly, monthly',
+  `job_status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT 'PENDING' COMMENT '任务状态：PENDING, RUNNING, COMPLETED, FAILED',
+  `last_run_time` timestamp NULL DEFAULT NULL COMMENT '上次运行时间',
+  `next_run_time` timestamp NULL DEFAULT NULL COMMENT '下次运行时间',
+  `run_count` int NULL DEFAULT 0 COMMENT '运行次数',
+  `success_count` int NULL DEFAULT 0 COMMENT '成功次数',
+  `error_message` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '错误信息',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `unique_job_name`(`job_name` ASC) USING BTREE,
+  INDEX `idx_job_type`(`job_type` ASC) USING BTREE,
+  INDEX `idx_job_status`(`job_status` ASC) USING BTREE,
+  INDEX `idx_next_run_time`(`next_run_time` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '数据分析任务调度表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of analytics_jobs
+-- ----------------------------
+INSERT INTO `analytics_jobs` VALUES (1, '每日数据统计', 'daily', 'PENDING', NULL, '2025-09-04 00:00:00', 0, 0, NULL, '2025-09-03 15:53:14', '2025-09-03 15:53:14');
+INSERT INTO `analytics_jobs` VALUES (2, '每周数据汇总', 'weekly', 'PENDING', NULL, '2025-09-10 00:00:00', 0, 0, NULL, '2025-09-03 15:53:14', '2025-09-03 15:53:14');
+INSERT INTO `analytics_jobs` VALUES (3, '每月数据报告', 'monthly', 'PENDING', NULL, '2025-10-03 00:00:00', 0, 0, NULL, '2025-09-03 15:53:14', '2025-09-03 15:53:14');
+INSERT INTO `analytics_jobs` VALUES (4, '动物类型统计更新', 'daily', 'PENDING', NULL, '2025-09-03 16:53:14', 0, 0, NULL, '2025-09-03 15:53:14', '2025-09-03 15:53:14');
+INSERT INTO `analytics_jobs` VALUES (5, '城市数据统计更新', 'daily', 'PENDING', NULL, '2025-09-03 17:53:14', 0, 0, NULL, '2025-09-03 15:53:14', '2025-09-03 15:53:14');
+
+-- ----------------------------
+-- Table structure for analytics_summary
+-- ----------------------------
+DROP TABLE IF EXISTS `analytics_summary`;
+CREATE TABLE `analytics_summary`  (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `metric_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '指标类型：daily, weekly, monthly',
+  `metric_date` date NOT NULL COMMENT '统计日期',
+  `total_adoptions` int NULL DEFAULT 0 COMMENT '总领养数',
+  `total_animals` int NULL DEFAULT 0 COMMENT '总动物数',
+  `total_users` int NULL DEFAULT 0 COMMENT '总用户数',
+  `new_adoptions` int NULL DEFAULT 0 COMMENT '新增领养数',
+  `new_animals` int NULL DEFAULT 0 COMMENT '新增动物数',
+  `new_users` int NULL DEFAULT 0 COMMENT '新增用户数',
+  `adoption_success_rate` decimal(5, 2) NULL DEFAULT 0.00 COMMENT '领养成功率',
+  `avg_adoption_days` decimal(8, 2) NULL DEFAULT 0.00 COMMENT '平均领养天数',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `unique_metric`(`metric_type` ASC, `metric_date` ASC) USING BTREE,
+  INDEX `idx_metric_date`(`metric_date` ASC) USING BTREE,
+  INDEX `idx_metric_type`(`metric_type` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '数据分析汇总表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of analytics_summary
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for animal_type_stats
+-- ----------------------------
+DROP TABLE IF EXISTS `animal_type_stats`;
+CREATE TABLE `animal_type_stats`  (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `animal_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '动物类型',
+  `total_count` int NULL DEFAULT 0 COMMENT '总数量',
+  `adopted_count` int NULL DEFAULT 0 COMMENT '已领养数量',
+  `available_count` int NULL DEFAULT 0 COMMENT '可领养数量',
+  `adoption_rate` decimal(5, 2) NULL DEFAULT 0.00 COMMENT '领养率',
+  `avg_age_months` int NULL DEFAULT 0 COMMENT '平均年龄(月)',
+  `last_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `unique_type`(`animal_type` ASC) USING BTREE,
+  INDEX `idx_adoption_rate`(`adoption_rate` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '动物类型统计表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of animal_type_stats
+-- ----------------------------
+INSERT INTO `animal_type_stats` VALUES (1, '其他', 6, 1, 5, 16.67, 16, '2025-09-03 15:50:54');
+INSERT INTO `animal_type_stats` VALUES (2, '狗', 12, 1, 11, 8.33, 34, '2025-09-03 15:50:54');
+INSERT INTO `animal_type_stats` VALUES (3, '猫', 12, 0, 11, 0.00, 30, '2025-09-03 15:50:54');
 
 -- ----------------------------
 -- Table structure for animals
@@ -78,8 +164,10 @@ CREATE TABLE `animals`  (
   INDEX `idx_animals_adopted`(`adopted` ASC) USING BTREE,
   INDEX `idx_animals_listed`(`listed` ASC) USING BTREE,
   INDEX `idx_type_city`(`type` ASC, `city` ASC) USING BTREE,
-  INDEX `idx_age`(`age` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 35 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+  INDEX `idx_age`(`age` ASC) USING BTREE,
+  INDEX `idx_type_adopted`(`type` ASC, `adopted` ASC) USING BTREE,
+  INDEX `idx_city_type`(`city` ASC, `type` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 36 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of animals
@@ -125,7 +213,7 @@ CREATE TABLE `cities`  (
   `pinyin` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `province` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 398 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 399 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of cities
@@ -472,6 +560,372 @@ INSERT INTO `cities` VALUES (397, '黑河市', '', '黑龙江省');
 INSERT INTO `cities` VALUES (398, '绥化市', '', '黑龙江省');
 
 -- ----------------------------
+-- Table structure for city_stats
+-- ----------------------------
+DROP TABLE IF EXISTS `city_stats`;
+CREATE TABLE `city_stats`  (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `city_id` int NOT NULL COMMENT '城市ID',
+  `city_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '城市名称',
+  `province_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '省份名称',
+  `total_animals` int NULL DEFAULT 0 COMMENT '动物总数',
+  `total_adoptions` int NULL DEFAULT 0 COMMENT '领养总数',
+  `total_users` int NULL DEFAULT 0 COMMENT '用户总数',
+  `adoption_rate` decimal(5, 2) NULL DEFAULT 0.00 COMMENT '领养率',
+  `popular_animal_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '最受欢迎的动物类型',
+  `last_updated` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `unique_city`(`city_id` ASC) USING BTREE,
+  INDEX `idx_city_name`(`city_name` ASC) USING BTREE,
+  INDEX `idx_province`(`province_name` ASC) USING BTREE,
+  INDEX `idx_adoption_rate`(`adoption_rate` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '城市统计表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of city_stats
+-- ----------------------------
+INSERT INTO `city_stats` VALUES (1, 59, '全国', '未知省份', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (2, 60, '北京市', '北京市', 10, 0, 1, 0.00, '狗', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (3, 61, '天津市', '天津市', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (4, 62, '上海市', '上海市', 11, 0, 0, 0.00, '猫', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (5, 63, '重庆市', '重庆市', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (6, 64, '石家庄市', '河北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (7, 65, '唐山市', '河北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (8, 66, '秦皇岛市', '河北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (9, 67, '邯郸市', '河北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (10, 68, '邢台市', '河北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (11, 69, '保定市', '河北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (12, 70, '张家口市', '河北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (13, 71, '承德市', '河北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (14, 72, '沧州市', '河北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (15, 73, '廊坊市', '河北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (16, 74, '衡水市', '河北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (17, 75, '太原市', '山西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (18, 76, '大同市', '山西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (19, 77, '阳泉市', '山西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (20, 78, '长治市', '山西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (21, 79, '晋城市', '山西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (22, 80, '朔州市', '山西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (23, 81, '晋中市', '山西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (24, 82, '运城市', '山西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (25, 83, '忻州市', '山西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (26, 84, '临汾市', '山西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (27, 85, '吕梁市', '山西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (28, 86, '呼和浩特市', '内蒙古自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (29, 87, '包头市', '内蒙古自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (30, 88, '乌海市', '内蒙古自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (31, 89, '赤峰市', '内蒙古自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (32, 90, '通辽市', '内蒙古自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (33, 91, '鄂尔多斯市', '内蒙古自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (34, 92, '呼伦贝尔市', '内蒙古自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (35, 93, '巴彦淖尔市', '内蒙古自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (36, 94, '乌兰察布市', '内蒙古自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (37, 95, '沈阳市', '辽宁省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (38, 96, '大连市', '辽宁省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (39, 97, '鞍山市', '辽宁省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (40, 98, '抚顺市', '辽宁省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (41, 99, '本溪市', '辽宁省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (42, 100, '丹东市', '辽宁省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (43, 101, '锦州市', '辽宁省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (44, 102, '营口市', '辽宁省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (45, 103, '阜新市', '辽宁省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (46, 104, '辽阳市', '辽宁省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (47, 105, '盘锦市', '辽宁省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (48, 106, '铁岭市', '辽宁省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (49, 107, '朝阳市', '辽宁省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (50, 108, '葫芦岛市', '辽宁省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (51, 109, '长春市', '吉林省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (52, 110, '吉林市', '吉林省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (53, 111, '四平市', '吉林省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (54, 112, '辽源市', '吉林省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (55, 113, '通化市', '吉林省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (56, 114, '白山市', '吉林省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (57, 115, '松原市', '吉林省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (58, 116, '白城市', '吉林省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (59, 117, '哈尔滨市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (60, 118, '齐齐哈尔市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (61, 119, '鸡西市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (62, 120, '鹤岗市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (63, 121, '双鸭山市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (64, 122, '大庆市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (65, 123, '伊春市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (66, 124, '佳木斯市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (67, 125, '七台河市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (68, 126, '牡丹江市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (69, 127, '黑河市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (70, 128, '绥化市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (71, 129, '南京市', '江苏省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (72, 130, '无锡市', '江苏省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (73, 131, '徐州市', '江苏省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (74, 132, '常州市', '江苏省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (75, 133, '苏州市', '江苏省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (76, 134, '南通市', '江苏省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (77, 135, '连云港市', '江苏省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (78, 136, '淮安市', '江苏省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (79, 137, '盐城市', '江苏省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (80, 138, '扬州市', '江苏省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (81, 139, '镇江市', '江苏省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (82, 140, '泰州市', '江苏省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (83, 141, '宿迁市', '江苏省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (84, 142, '杭州市', '浙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (85, 143, '宁波市', '浙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (86, 144, '温州市', '浙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (87, 145, '嘉兴市', '浙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (88, 146, '湖州市', '浙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (89, 147, '绍兴市', '浙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (90, 148, '金华市', '浙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (91, 149, '衢州市', '浙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (92, 150, '舟山市', '浙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (93, 151, '台州市', '浙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (94, 152, '丽水市', '浙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (95, 153, '合肥市', '安徽省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (96, 154, '芜湖市', '安徽省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (97, 155, '蚌埠市', '安徽省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (98, 156, '淮南市', '安徽省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (99, 157, '马鞍山市', '辽宁省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (100, 158, '淮北市', '安徽省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (101, 159, '铜陵市', '安徽省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (102, 160, '安庆市', '安徽省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (103, 161, '黄山市', '安徽省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (104, 162, '滁州市', '安徽省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (105, 163, '阜阳市', '安徽省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (106, 164, '宿州市', '安徽省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (107, 165, '六安市', '安徽省', 1, 0, 0, 0.00, '狗', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (108, 166, '亳州市', '安徽省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (109, 167, '池州市', '安徽省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (110, 168, '宣城市', '安徽省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (111, 169, '福州市', '福建省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (112, 170, '厦门市', '福建省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (113, 171, '莆田市', '福建省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (114, 172, '三明市', '福建省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (115, 173, '泉州市', '福建省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (116, 174, '漳州市', '福建省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (117, 175, '南平市', '福建省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (118, 176, '龙岩市', '福建省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (119, 177, '宁德市', '福建省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (120, 178, '南昌市', '江西省', 1, 0, 0, 0.00, '狗', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (121, 179, '景德镇市', '江西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (122, 180, '萍乡市', '江西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (123, 181, '九江市', '江西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (124, 182, '新余市', '江西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (125, 183, '鹰潭市', '江西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (126, 184, '赣州市', '江西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (127, 185, '吉安市', '江西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (128, 186, '宜春市', '江西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (129, 187, '抚州市', '江西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (130, 188, '上饶市', '江西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (131, 189, '济南市', '山东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (132, 190, '青岛市', '山东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (133, 191, '淄博市', '山东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (134, 192, '枣庄市', '山东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (135, 193, '东营市', '山东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (136, 194, '烟台市', '山东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (137, 195, '潍坊市', '山东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (138, 196, '济宁市', '山东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (139, 197, '泰安市', '山东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (140, 198, '威海市', '山东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (141, 199, '日照市', '山东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (142, 200, '临沂市', '山东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (143, 201, '德州市', '山东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (144, 202, '聊城市', '山东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (145, 203, '滨州市', '山东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (146, 204, '菏泽市', '山东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (147, 205, '郑州市', '河南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (148, 206, '开封市', '河南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (149, 207, '洛阳市', '河南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (150, 208, '平顶山市', '河南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (151, 209, '安阳市', '河南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (152, 210, '鹤壁市', '河南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (153, 211, '新乡市', '河南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (154, 212, '焦作市', '河南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (155, 213, '濮阳市', '河南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (156, 214, '许昌市', '河南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (157, 215, '漯河市', '河南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (158, 216, '三门峡市', '河南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (159, 217, '南阳市', '河南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (160, 218, '商丘市', '河南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (161, 219, '信阳市', '河南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (162, 220, '周口市', '河南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (163, 221, '驻马店市', '河南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (164, 222, '武汉市', '湖北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (165, 223, '黄石市', '湖北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (166, 224, '十堰市', '湖北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (167, 225, '宜昌市', '湖北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (168, 226, '襄阳市', '湖北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (169, 227, '鄂州市', '湖北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (170, 228, '荆门市', '湖北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (171, 229, '孝感市', '湖北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (172, 230, '荆州市', '湖北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (173, 231, '黄冈市', '湖北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (174, 232, '咸宁市', '湖北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (175, 233, '随州市', '湖北省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (176, 234, '长沙市', '湖南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (177, 235, '株洲市', '湖南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (178, 236, '湘潭市', '湖南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (179, 237, '衡阳市', '湖南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (180, 238, '邵阳市', '湖南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (181, 239, '岳阳市', '湖南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (182, 240, '常德市', '湖南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (183, 241, '张家界市', '湖南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (184, 242, '益阳市', '湖南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (185, 243, '郴州市', '湖南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (186, 244, '永州市', '湖南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (187, 245, '怀化市', '湖南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (188, 246, '娄底市', '湖南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (189, 247, '广州市', '广东省', 4, 0, 0, 0.00, '其他', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (190, 248, '韶关市', '广东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (191, 249, '深圳市', '广东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (192, 250, '珠海市', '广东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (193, 251, '汕头市', '广东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (194, 252, '佛山市', '广东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (195, 253, '江门市', '广东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (196, 254, '湛江市', '广东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (197, 255, '茂名市', '广东省', 1, 0, 0, 0.00, '其他', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (198, 256, '肇庆市', '广东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (199, 257, '惠州市', '广东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (200, 258, '梅州市', '广东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (201, 259, '汕尾市', '广东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (202, 260, '河源市', '广东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (203, 261, '阳江市', '广东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (204, 262, '清远市', '广东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (205, 263, '东莞市', '广东省', 1, 0, 0, 0.00, '其他', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (206, 264, '中山市', '广东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (207, 265, '潮州市', '广东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (208, 266, '揭阳市', '广东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (209, 267, '云浮市', '广东省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (210, 268, '南宁市', '广西壮族自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (211, 269, '柳州市', '广西壮族自治区', 0, 0, 1, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (212, 270, '桂林市', '广西壮族自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (213, 271, '梧州市', '广西壮族自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (214, 272, '北海市', '广西壮族自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (215, 273, '防城港市', '广西壮族自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (216, 274, '钦州市', '广西壮族自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (217, 275, '贵港市', '广西壮族自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (218, 276, '玉林市', '广西壮族自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (219, 277, '百色市', '广西壮族自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (220, 278, '贺州市', '广西壮族自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (221, 279, '河池市', '广西壮族自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (222, 280, '来宾市', '广西壮族自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (223, 281, '崇左市', '广西壮族自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (224, 282, '海口市', '海南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (225, 283, '三亚市', '海南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (226, 284, '三沙市', '海南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (227, 285, '儋州市', '海南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (228, 286, '成都市', '四川省', 1, 0, 0, 0.00, '猫', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (229, 287, '自贡市', '四川省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (230, 288, '攀枝花市', '四川省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (231, 289, '泸州市', '四川省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (232, 290, '德阳市', '四川省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (233, 291, '绵阳市', '四川省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (234, 292, '广元市', '四川省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (235, 293, '遂宁市', '四川省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (236, 294, '内江市', '四川省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (237, 295, '乐山市', '四川省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (238, 296, '南充市', '四川省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (239, 297, '眉山市', '四川省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (240, 298, '宜宾市', '四川省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (241, 299, '广安市', '四川省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (242, 300, '达州市', '四川省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (243, 301, '雅安市', '四川省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (244, 302, '巴中市', '四川省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (245, 303, '资阳市', '四川省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (246, 304, '贵阳市', '贵州省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (247, 305, '六盘水市', '贵州省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (248, 306, '遵义市', '贵州省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (249, 307, '安顺市', '贵州省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (250, 308, '毕节市', '贵州省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (251, 309, '铜仁市', '贵州省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (252, 310, '昆明市', '云南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (253, 311, '曲靖市', '云南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (254, 312, '玉溪市', '云南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (255, 313, '保山市', '云南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (256, 314, '昭通市', '云南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (257, 315, '丽江市', '云南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (258, 316, '普洱市', '云南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (259, 317, '临沧市', '云南省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (260, 318, '拉萨市', '西藏自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (261, 319, '日喀则市', '西藏自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (262, 320, '昌都市', '西藏自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (263, 321, '林芝市', '西藏自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (264, 322, '山南市', '西藏自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (265, 323, '那曲市', '西藏自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (266, 324, '西安市', '陕西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (267, 325, '铜川市', '陕西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (268, 326, '宝鸡市', '陕西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (269, 327, '咸阳市', '陕西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (270, 328, '渭南市', '陕西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (271, 329, '延安市', '陕西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (272, 330, '汉中市', '陕西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (273, 331, '榆林市', '陕西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (274, 332, '安康市', '陕西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (275, 333, '商洛市', '陕西省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (276, 334, '兰州市', '甘肃省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (277, 335, '嘉峪关市', '甘肃省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (278, 336, '金昌市', '甘肃省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (279, 337, '白银市', '甘肃省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (280, 338, '天水市', '甘肃省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (281, 339, '武威市', '甘肃省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (282, 340, '张掖市', '甘肃省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (283, 341, '平凉市', '甘肃省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (284, 342, '酒泉市', '甘肃省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (285, 343, '庆阳市', '甘肃省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (286, 344, '定西市', '甘肃省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (287, 345, '陇南市', '甘肃省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (288, 346, '西宁市', '青海省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (289, 347, '海东市', '青海省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (290, 348, '海北藏族自治州', '青海省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (291, 349, '黄南藏族自治州', '青海省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (292, 350, '海南藏族自治州', '青海省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (293, 351, '果洛藏族自治州', '青海省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (294, 352, '玉树藏族自治州', '青海省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (295, 353, '海西蒙古族藏族自治州', '青海省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (296, 354, '银川市', '宁夏回族自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (297, 355, '石嘴山市', '宁夏回族自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (298, 356, '吴忠市', '宁夏回族自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (299, 357, '固原市', '宁夏回族自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (300, 358, '中卫市', '宁夏回族自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (301, 359, '乌鲁木齐市', '新疆维吾尔自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (302, 360, '克拉玛依市', '新疆维吾尔自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (303, 361, '吐鲁番市', '新疆维吾尔自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (304, 362, '哈密市', '新疆维吾尔自治区', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (305, 363, '哈尔滨市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (306, 364, '齐齐哈尔市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (307, 365, '鸡西市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (308, 366, '鹤岗市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (309, 367, '双鸭山市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (310, 368, '大庆市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (311, 369, '伊春市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (312, 370, '佳木斯市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (313, 371, '七台河市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (314, 372, '牡丹江市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (315, 373, '黑河市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (316, 374, '绥化市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (317, 375, '哈尔滨市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (318, 376, '齐齐哈尔市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (319, 377, '鸡西市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (320, 378, '鹤岗市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (321, 379, '双鸭山市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (322, 380, '大庆市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (323, 381, '伊春市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (324, 382, '佳木斯市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (325, 383, '七台河市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (326, 384, '牡丹江市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (327, 385, '黑河市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (328, 386, '绥化市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (329, 387, '哈尔滨市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (330, 388, '齐齐哈尔市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (331, 389, '鸡西市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (332, 390, '鹤岗市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (333, 391, '双鸭山市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (334, 392, '大庆市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (335, 393, '伊春市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (336, 394, '佳木斯市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (337, 395, '七台河市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (338, 396, '牡丹江市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (339, 397, '黑河市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+INSERT INTO `city_stats` VALUES (340, 398, '绥化市', '黑龙江省', 0, 0, 0, 0.00, '无', '2025-09-03 15:52:06');
+
+-- ----------------------------
 -- Table structure for missing_pets
 -- ----------------------------
 DROP TABLE IF EXISTS `missing_pets`;
@@ -501,7 +955,7 @@ CREATE TABLE `missing_pets`  (
   INDEX `idx_missing_pets_city_status`(`city` ASC, `status` ASC) USING BTREE,
   INDEX `idx_missing_pets_created_at`(`created_at` ASC) USING BTREE,
   INDEX `idx_missing_pets_lost_time`(`lost_time` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '寻宠信息' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '寻宠信息' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of missing_pets
@@ -520,7 +974,7 @@ CREATE TABLE `province_city`  (
   `province` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `city` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 303 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 304 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of province_city
@@ -1198,13 +1652,40 @@ CREATE TABLE `user_address`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `FKdbvev60cbcacx6d6i7d1m5xe1`(`username` ASC) USING BTREE,
   CONSTRAINT `FKdbvev60cbcacx6d6i7d1m5xe1` FOREIGN KEY (`username`) REFERENCES `user_info` (`username`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of user_address
 -- ----------------------------
 INSERT INTO `user_address` VALUES (1, 'admin', '张三', '13800138000', '柳州市', '浦东新区世纪大道100号', 1);
 INSERT INTO `user_address` VALUES (2, 'admin', '李四', '13900139000', '北京市', '朝阳区建国路88号', 0);
+
+-- ----------------------------
+-- Table structure for user_behavior_analytics
+-- ----------------------------
+DROP TABLE IF EXISTS `user_behavior_analytics`;
+CREATE TABLE `user_behavior_analytics`  (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL COMMENT '用户ID',
+  `behavior_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '行为类型：login, view_animal, favorite, adopt_request, adopt_complete',
+  `target_id` int NULL DEFAULT NULL COMMENT '目标ID（如动物ID）',
+  `target_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '目标类型：animal, order等',
+  `behavior_date` date NOT NULL COMMENT '行为日期',
+  `behavior_time` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT '行为时间',
+  `session_id` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '会话ID',
+  `ip_address` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT 'IP地址',
+  `user_agent` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL COMMENT '用户代理',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
+  INDEX `idx_behavior_type`(`behavior_type` ASC) USING BTREE,
+  INDEX `idx_behavior_date`(`behavior_date` ASC) USING BTREE,
+  INDEX `idx_target`(`target_type` ASC, `target_id` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户行为分析表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of user_behavior_analytics
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for user_checkin
@@ -1219,7 +1700,7 @@ CREATE TABLE `user_checkin`  (
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `FKl72tkvq5clshjppob168kfymc`(`username` ASC) USING BTREE,
   CONSTRAINT `FKl72tkvq5clshjppob168kfymc` FOREIGN KEY (`username`) REFERENCES `user_info` (`username`) ON DELETE RESTRICT ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 20 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 24 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of user_checkin
@@ -1307,7 +1788,7 @@ CREATE TABLE `user_info`  (
   INDEX `idx_username`(`username` ASC) USING BTREE,
   INDEX `idx_user_info_phone`(`phone` ASC) USING BTREE,
   INDEX `idx_user_info_real_name`(`real_name` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 11 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of user_info
@@ -1332,7 +1813,7 @@ CREATE TABLE `user_real_name`  (
   UNIQUE INDEX `UK6sgoexdsrd3t68jqsqk6e1i9c`(`id_number` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_id_number`(`id_number` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of user_real_name
@@ -1351,6 +1832,59 @@ CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `adoption_stats` AS selec
 -- ----------------------------
 DROP VIEW IF EXISTS `popular_pets`;
 CREATE ALGORITHM = UNDEFINED SQL SECURITY DEFINER VIEW `popular_pets` AS select `a`.`id` AS `id`,`a`.`name` AS `name`,`a`.`gender` AS `gender`,`a`.`age` AS `age`,`a`.`type` AS `type`,`a`.`description` AS `description`,`a`.`vaccinated` AS `vaccinated`,`a`.`dewormed` AS `dewormed`,`a`.`neutered` AS `neutered`,`a`.`image` AS `image`,`a`.`city` AS `city`,`a`.`isFree` AS `isFree`,`a`.`is_free` AS `is_free`,`a`.`favorite_count` AS `favorite_count`,`a`.`user_id` AS `user_id`,`a`.`adopted` AS `adopted`,`a`.`listed` AS `listed`,((`a`.`favorite_count` * 2) + if((`a`.`adopted` = 0),5,0)) AS `popularity_score` from `animals` `a` where (`a`.`listed` = 1) order by ((`a`.`favorite_count` * 2) + if((`a`.`adopted` = 0),5,0)) desc;
+
+-- ----------------------------
+-- Procedure structure for UpdateAnalyticsStats
+-- ----------------------------
+DROP PROCEDURE IF EXISTS `UpdateAnalyticsStats`;
+delimiter ;;
+CREATE PROCEDURE `UpdateAnalyticsStats`()
+BEGIN
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        RESIGNAL;
+    END;
+    
+    START TRANSACTION;
+    INSERT INTO animal_type_stats (animal_type, total_count, adopted_count, available_count, adoption_rate, avg_age_months)
+    SELECT 
+        type as animal_type,
+        COUNT(*) as total_count,
+        SUM(CASE WHEN adopted = 1 THEN 1 ELSE 0 END) as adopted_count,
+        SUM(CASE WHEN adopted = 0 AND listed = 1 THEN 1 ELSE 0 END) as available_count,
+        ROUND(SUM(CASE WHEN adopted = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) as adoption_rate,
+        ROUND(AVG(age * 12), 0) as avg_age_months
+    FROM animals 
+    GROUP BY type
+    ON DUPLICATE KEY UPDATE
+        total_count = VALUES(total_count),
+        adopted_count = VALUES(adopted_count),
+        available_count = VALUES(available_count),
+        adoption_rate = VALUES(adoption_rate),
+        avg_age_months = VALUES(avg_age_months);
+    INSERT INTO analytics_summary (metric_type, metric_date, total_adoptions, total_animals, total_users, new_adoptions, new_animals, new_users)
+    SELECT 
+        'daily' as metric_type,
+        CURDATE() as metric_date,
+        (SELECT COUNT(*) FROM adoption_orders WHERE status = 'COMPLETED') as total_adoptions,
+        (SELECT COUNT(*) FROM animals) as total_animals,
+        (SELECT COUNT(DISTINCT username) FROM user_address) as total_users,
+        (SELECT COUNT(*) FROM adoption_orders WHERE status = 'COMPLETED' AND DATE(created_at) = CURDATE()) as new_adoptions,
+        (SELECT COUNT(*) FROM animals WHERE DATE(created_at) = CURDATE()) as new_animals,
+        (SELECT COUNT(DISTINCT username) FROM user_address WHERE DATE(created_at) = CURDATE()) as new_users
+    ON DUPLICATE KEY UPDATE
+        total_adoptions = VALUES(total_adoptions),
+        total_animals = VALUES(total_animals),
+        total_users = VALUES(total_users),
+        new_adoptions = VALUES(new_adoptions),
+        new_animals = VALUES(new_animals),
+        new_users = VALUES(new_users);
+    
+    COMMIT;
+END
+;;
+delimiter ;
 
 -- ----------------------------
 -- Triggers structure for table adoption_orders
